@@ -1,0 +1,15 @@
+name = "scratchpad"
+version = "0.1.0"
+defaultTargets = ["scratchpad"]
+
+[[lean_lib]]
+name = "Scratchpad"
+
+[[lean_exe]]
+name = "scratchpad"
+root = "Main"
+
+[[require]]
+name = "auto"
+scope = "leanprover-community"
+rev = "9c13e6716532971258ad2b376aa95929ef1b1763"
