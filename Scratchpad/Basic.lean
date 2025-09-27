@@ -64,10 +64,8 @@ prove: ∀ (arr1 arr2 arr3 arr4: Array Int),
     ∧ isMax (maxElem arr2) arr2
     by
   intro arr1 arr2 arr3 arr4 h1 h2 h3 h4
-  time_tactic (repeat' (apply And.intro <;> try (unfold isMax; intro i h; unfold maxElem ; try auto [*] )))
-  · time_tactic (skip)
-    simp_all
-    simp_all
+  repeat' (apply And.intro <;> try (unfold isMax; intro i h; unfold maxElem ; try auto [*] ))
+  · simp_all
   · skip
   · simp_all
   · sorry

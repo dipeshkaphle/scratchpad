@@ -12,4 +12,4 @@ root = "Main"
 [[require]]
 name = "auto"
 scope = "leanprover-community"
-rev = "9c13e6716532971258ad2b376aa95929ef1b1763"
+rev = "2c088e7617d6e2018386de23b5df3b127fae4634"
