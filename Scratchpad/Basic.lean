@@ -10,14 +10,52 @@ set_option auto.smt.solver.name "cvc5"
 syntax "prove" ":" term "by" tacticSeq : command
 
 -- Command elaborator with timing
-open Lean Elab Command in
+open Lean Elab Command Term Meta Lean.Parser
+
+def f ( x: α ) := x
+
+syntax "prove" ":" term "unfolding" ident "by" tacticSeq : command
+
 @[incremental]
-elab "prove" ":" prop:term "by" tactics:tacticSeq : command => do
-  let startTime ← IO.monoMsNow
-  elabCommand (← `(example : $prop := by $tactics))
-  let endTime ← IO.monoMsNow
-  let elapsed := endTime - startTime
-  logInfo m!"Proof elaborated in {elapsed}ms"
+elab_rules : command
+  | `(command| prove : $prop:term unfolding $toBeUnfolded:ident  by%$tkp $proof:tacticSeq ) => do
+      let startTime ← IO.monoMsNow
+      -- Fast with this 
+      --let proofSeq ← withRef tkp `(tacticSeq|
+        --try (unfold $toBeUnfolded)
+        --($proof))
+      --let thmCmd <- withRef tkp `(command|
+        --example: $prop := by $proofSeq
+      --)
+
+
+      -- Fast with this too
+      --let proofSeq ← `(tacticSeq|
+        --unfold $toBeUnfolded
+        --($proof))
+      --let thmCmd <- withRef tkp `(command|
+        --example: $prop := by $proofSeq
+      --)
+
+      -- Fast with this too
+      --let thmCmd <- withRef tkp `(command|
+        --example: $prop := by (
+        --unfold $toBeUnfolded
+        --($proof)
+        --)
+      --)
+
+      -- Slow with this ofc
+      let thmCmd <- `(command|
+        example: $prop := by (
+        unfold $toBeUnfolded
+        ($proof)
+        )
+      )
+      elabCommand thmCmd
+      let endTime ← IO.monoMsNow
+      let elapsed := endTime - startTime
+      logInfo m!"Proof elaborated in {elapsed}ms"
 
 -- Timing tactic that measures and logs execution time
 open Lean Elab Tactic Meta in
@@ -62,10 +100,12 @@ prove: ∀ (arr1 arr2 arr3 arr4: Array Int),
     ∧ isMax (maxElem arr4) arr4
     ∧ isMax (maxElem arr2) arr2
     ∧ isMax (maxElem arr2) arr2
+    unfolding isMax
     by
   intro arr1 arr2 arr3 arr4 h1 h2 h3 h4
   repeat' (apply And.intro <;> try (unfold isMax; intro i h; unfold maxElem ; try auto [*] ))
   · simp_all
+    skip
   · skip
   · simp_all
   · sorry
@@ -105,10 +145,12 @@ example: ∀ (arr1 arr2 arr3 arr4: Array Int),
     ∧ isMax (maxElem arr2) arr2
     ∧ isMax (maxElem arr2) arr2
     := by
+  try (unfold f)
   intro arr1 arr2 arr3 arr4 h1 h2 h3 h4
   time_tactic (repeat' (apply And.intro <;> try (unfold isMax; intro i h; unfold maxElem ; try auto [*] )))
   · simp_all
     simp_all
+    ssimp_all
   · skip
   · simp_all
   · sorry
